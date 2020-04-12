@@ -143,7 +143,10 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+    int A = ~x & y;
+    int B = x & ~y;
+
+    return ~(~A & ~B);
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -153,10 +156,9 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return 2;
+    return (~0) << 31;
 
 }
-//2
 /*
  * isTmax - returns 1 if x is the maximum, two's complement number,
  *     and 0 otherwise 
@@ -165,8 +167,11 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+    // when x = ob1111111...1, !!x = 1, not vise versa;
+    // when x = 0b0000000...0, !!x = 0, vise versa 
+    return !(x + 1 + x + 1) & !!(~x);
 }
+
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
  *   where bits are numbered from 0 (least significant) to 31 (most significant)
@@ -176,7 +181,11 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+
+    int key = 0xAA | (0xAA << 8);
+    key = key | (key << 16);
+
+    return !((x & key) ^ key);
 }
 /* 
  * negate - return -x 
@@ -186,7 +195,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return (~x) + 1;
 }
 //3
 /* 
@@ -199,7 +208,15 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+    // 0x30 <= x <= 0x39
+    // x - 0x30 >= 0 && 0x39 - x >= 0
+    // should use >= rather than <=, since 0 should not be a part of negative
+    // -m == ~m + 1
+    // if m >= 0, then m >> 31 == 0;
+    // if m < 0, then m >> 31 == 1;
+    int left = x + (~0x30 + 1);
+    int right = 0x39 + (~x + 1);
+    return !(left >> 31) & !(right >> 31);
 }
 /* 
  * conditional - same as x ? y : z 
@@ -209,7 +226,10 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+    // if x != 0, then !!x = 1, w = 111111...1;
+    // if x == 0, then !!x = 0, w = 000000...0;
+    int w = (!!x) << 31 >> 31;
+    return (w & y) | (~w & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -219,7 +239,10 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+    // negative minus positive may overflow
+    int sameSign = !((x>>31) ^ (y>>31));
+    int res = y + (~x + 1);
+    return (sameSign & !(res >> 31)) | (!sameSign & (x >> 31));
 }
 //4
 /* 
@@ -231,7 +254,8 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+
+    return ~((x | (~x + 1)) >> 31) & 0x1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
